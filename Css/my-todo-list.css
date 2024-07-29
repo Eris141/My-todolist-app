@@ -43,7 +43,7 @@ img {
   background: whitesmoke;
   border-radius: 8px;
   margin-right: 8px;
-  margin-bottom: 24px;
+  margin-bottom: px;
   border: none;
 }
 
@@ -82,8 +82,10 @@ button {
   justify-content: space-between;
   margin-bottom: 16px;
   align-items: center;
-  padding: 6px 6px 6px 6px;
+  padding: 10px 8px 8px 10px;
   border-radius: 4px ;
+  background-color: #f6fffc;
+  border: 1px solid #e2e2e2;
 }
 
 .task-text {
@@ -97,9 +99,15 @@ button {
 
 .completed {
   text-decoration: line-through;
-  opacity: 0.5;
+  opacity: 0.3;
+
+
 }
 
+.fall {
+  transform: translateY(8rem) rotate(20deg);
+  opacity: 0;
+}
 
 #counter-cont {
   margin-top: 1rem;
