@@ -3,25 +3,27 @@
 //get references to the input field and rask list
 const newTodoInput = document.getElementById('input-todo');
 const taskList = document.getElementById('task-list');
-
 // add the event listtner for the button action
 const addTodoButton = document.getElementById('add-todo-button');
 //delete all button
 const deleteAll = document.getElementById('delete-all-button');
+const taskCount = document.getElementById('todo-count'); 
 
 //handleAddTodo is the fucntion that makes the process when the butt is clickd
-document.addEventListener("DOMContentLoaded", function() {
-  addTodoButton.addEventListener('click', handleAddTodo);
-  newTodoInput.addEventListener('keydown', function (event) {
-    if(event.key === "Enter") {
-      event.preventDefault();
-      handleAddTodo();
-    }
-  });
-  deleteAll.addEventListener('click', deleteAllTasks);
 
-  loadTasks();
+
+addTodoButton.addEventListener('click', handleAddTodo);
+
+newTodoInput.addEventListener('keyup', function (event) {
+  if(event.key === "Enter") {
+    handleAddTodo();
+  }
 });
+
+deleteAll.addEventListener('click', deleteAllTasks);
+
+loadTasks();
+
 
 
 //here is the fucntion that adds the new task when button is cliked
@@ -34,6 +36,7 @@ function handleAddTodo() {
     saveTasks();
      //clear the input field for the next task
     newTodoInput.value = '';
+    newTodoInput.focus();
   } else {
     alert("Please enter a task!");
   }
@@ -44,7 +47,6 @@ function displayTodoItem(getNewTaskText, isChecked = false) {
   //create a new list item for the task
   const newTodoItem = document.createElement('li');
   newTodoItem.className = "task-item";
-
   //div inside the li
   const divInsideLi = document.createElement('div');
   divInsideLi.classList.add('todotask-div');
@@ -59,8 +61,6 @@ function displayTodoItem(getNewTaskText, isChecked = false) {
   const span = document.createElement('span');
   span.className = 'task-text';
   span.textContent = getNewTaskText;
-
-
   //add checbox and test to div
   divInsideLi.appendChild(checkbox);
   divInsideLi.appendChild(span);
@@ -68,8 +68,10 @@ function displayTodoItem(getNewTaskText, isChecked = false) {
   newTodoItem.appendChild(divInsideLi);
   //add all to task list
   taskList.appendChild(newTodoItem);
+  
+  //update taskCount
+  updateTaskCount();
 
-  //fucntion adds delete button and deletes the task when clicked
   deleteTodoButon(newTodoItem);
 }
 
@@ -89,7 +91,17 @@ function handleDeleteTask(event) {
   //removes the task from the list
   const taskItem = event.target.parentNode;
   taskList.removeChild(taskItem);
+  updateTaskCount();
   saveTasks();
+}
+
+
+//fucntion for delete all tasks
+function deleteAllTasks(event) {
+  taskList.innerHTML = '';
+  updateTaskCount();
+  saveTasks();
+
 }
 
 function completedTodo(event) {
@@ -98,39 +110,26 @@ function completedTodo(event) {
   saveTasks();
 }
 
+function updateTaskCount() {
+  taskCount.textContent = taskList.children.length;
+}
+
 function saveTasks() {
-  //get all the tasks from the task list 
-  const taskItems = document.querySelectorAll('.task-item');
-  const tasks = [];
-  
-  //loop through each task and get the text and checked status
-  taskItems.forEach(item => {
-    const text = item.querySelector('.task-text').textContent;
-    const checked = item.querySelector('.task-checkbox').checked;
-    tasks.push({text, checked});
-  });
-
-  //save the tasks array to local storage
-
+  //using map to get and save the data, simpler
+const tasks = Array.from(taskList.children).map(item => ({
+  text: item.querySelector('.task-text').textContent,
+  checked: item.querySelector('.task-checkbox').checked
+}));
   localStorage.setItem('tasks', JSON.stringify(tasks));
 }
 
+
 function loadTasks() {
   //get the tasks from local storage
-
   const tasks = JSON.parse(localStorage.getItem('tasks')) || [];
-
+  
   //loop through each task and displt it
   tasks.forEach(task => {
     displayTodoItem(task.text, task.checked);
   });
 }
-
-//fucntion for delete all tasks
-function deleteAllTasks(event) {
-  taskList.innerHTML = '';
-
-  saveTasks();
-
-}
-
