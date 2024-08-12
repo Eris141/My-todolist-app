@@ -30,27 +30,40 @@ loadTasks();
 function handleAddTodo() {
   //get the value that is entered by user
   const getNewTaskText = newTodoInput.value.trim();
-  //check if the user has entered text or not 
+
   if (getNewTaskText) {
-    displayTodoItem(getNewTaskText);
-    saveTasks();
-     //clear the input field for the next task
+    const newTask = {title: getNewTaskText, description: ""};
+
+    //send post request to backend to add the new task
+    fetch('/tasks', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({title: getNewTaskText, description: "a task descritpitonm"})
+    })
+    .then(response => response.json())
+    .then(task => {
+      displayTodoItem(task.title, task.id);
+    })
+    .catch(error => console.error("Error adding tasks", error));
+
     newTodoInput.value = '';
     newTodoInput.focus();
+
   } else {
     alert("Please enter a task!");
   }
 
 }
 
-function displayTodoItem(getNewTaskText, isChecked = false) {
-  //create a new list item for the task
+function displayTodoItem(getNewTaskText, taskId, isChecked = false) {
+
   const newTodoItem = document.createElement('li');
   newTodoItem.className = "task-item";
-  //div inside the li
+  newTodoItem.dataset.id = taskId; //set the task ID as a data atribute
+
   const divInsideLi = document.createElement('div');
   divInsideLi.classList.add('todotask-div');
-  //creates a new variable to store the input with the
+
   const checkbox = document.createElement('input');
   checkbox.type = 'checkbox';
   checkbox.className = 'task-checkbox';
@@ -61,23 +74,21 @@ function displayTodoItem(getNewTaskText, isChecked = false) {
   const span = document.createElement('span');
   span.className = 'task-text';
   span.textContent = getNewTaskText;
-  //add checbox and test to div
+
   divInsideLi.appendChild(checkbox);
   divInsideLi.appendChild(span);
-  //add div to li
+
   newTodoItem.appendChild(divInsideLi);
   //add all to task list
   taskList.appendChild(newTodoItem);
   
-  //update taskCount
   updateTaskCount();
-
   deleteTodoButon(newTodoItem);
 }
 
 //add delete button
 function deleteTodoButon(newTodoItem) {
-  // creates the delete button on the task
+
   const deleteButton = document.createElement('button');
   deleteButton.textContent = 'Delete';
   //add the event listner when clicket so i can delete the task
@@ -90,24 +101,45 @@ function deleteTodoButon(newTodoItem) {
 function handleDeleteTask(event) {
   //removes the task from the list
   const taskItem = event.target.parentNode;
-  taskList.removeChild(taskItem);
-  updateTaskCount();
-  saveTasks();
+  const taskId = taskItem.dataset.id;
+
+  fetch(`/tasks/${taskId}`, {
+    method: 'DELETE'
+  })
+  .then(() => {
+    taskList.removeChild(taskItem);
+    updateTaskCount();
+    saveTasks();
+  })
 }
 
 
 //fucntion for delete all tasks
 function deleteAllTasks(event) {
-  taskList.innerHTML = '';
-  updateTaskCount();
-  saveTasks();
+  fetch('/tasks', {
+    method: 'DELETE'
+  })
+  .then(() => {
+    taskList.innerHTML = '';
+    updateTaskCount();
+  })
+  .catch(error => console.error("Error deleting all tasks", error));
 
 }
 
 function completedTodo(event) {
-  const item = event.target.parentElement;
+  const item = event.target.parentElement.parentElement;
+  const taskId = item.dataset.id;
+
   item.classList.toggle('completed');
-  saveTasks();
+
+  const isChecked = event.target.checked;
+
+  fetch(`/tasks/${taskId}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ checked: isChecked })
+  });
 }
 
 function updateTaskCount() {
@@ -125,11 +157,12 @@ const tasks = Array.from(taskList.children).map(item => ({
 
 
 function loadTasks() {
-  //get the tasks from local storage
-  const tasks = JSON.parse(localStorage.getItem('tasks')) || [];
-  
-  //loop through each task and displt it
-  tasks.forEach(task => {
-    displayTodoItem(task.text, task.checked);
-  });
+  fetch('/tasks')
+    .then(response => response.json())
+    .then(tasks => {
+      tasks.forEach(task => {
+        displayTodoItem(task.title, task.id, task.checked);
+      });
+    })
+    .catch(error => console.error("Error  fetching taskas", error));
 }
